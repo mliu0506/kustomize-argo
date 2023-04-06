@@ -1,0 +1,64 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: openshift-gitops
+
+images:
+  - name: image-name
+    newName: quay.io/abdul_ali/actions-test:dev
+
+commonLabels:
+  group: kustomize
+  app: demo
+
+resources:
+  - ../../../base/base-node
+
+patchesStrategicMerge:
+  - ./patches/configmap.yaml
+  - ./patches/deployment.yaml
+
+patchesJson6902:
+
+######### config maps #########
+- target:
+    version: v1
+    kind: ConfigMap
+    name: service
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: github-actions-dev
+
+######### deployment ######### 
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: deployment
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: github-actions-dev
+    - op: replace
+      path: /spec/template/spec/containers/0/name
+      value: github-actions-dev
+    - op: add
+      path: /spec/template/spec/containers/0/envFrom
+      value:
+        - configMapRef: { name: github-actions-dev }
+
+
+######### service ######### 
+- target:
+    version: v1
+    kind: Service
+    name: service
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: github-actions-dev
+    - op: replace
+      path: /spec/selector/app
+      value: github-actions-dev   
+

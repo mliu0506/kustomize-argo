@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment
+spec:
+  template:
+    spec:
+      containers:
+        - name: container-name
+          image: image-name
+          env:
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
+          envFrom:
+            - configMapRef:
+                name: github-actions-dev
+          readinessProbe:
+            httpGet:
+              path: /github-actions/system/healthz
+              port: 8080
+              scheme: HTTP
